@@ -343,15 +343,15 @@ sns.histplot(data=longform_df_, x="WOZ_per_m2", kde=True, hue="Bezit Ymere", ele
 
 longform_df_ = longform_df[longform_df["year"]==f"WOZ_{latest_year}_per_m2"]
 desc_df = longform_df_[["WOZ_per_m2", "year", "Tuin aanwezig"]].groupby(["year", "Tuin aanwezig"]).describe().astype(int)
-display(desc_df)
+print(desc_df)
 desc_df = longform_df_[["WOZ_per_m2", "year", "Bezit Ymere"]].groupby(["year", "Bezit Ymere"]).describe().astype(int)
-display(desc_df)
+print(desc_df)
 desc_df = longform_df_[["WOZ_per_m2", "year", "verdieping"]].groupby(["year", "verdieping"]).describe().astype(int)
-display(desc_df)
+print(desc_df)
 
 
 desc_df = longform_df[["WOZ_per_m2", "year"]].groupby("year").describe().astype(int)
-display(desc_df.loc[:,(slice(None),['count','mean', 'std', 'min', 'max'])])
+print(desc_df.loc[:,(slice(None),['count','mean', 'std', 'min', 'max'])])
 
 
 # %%
@@ -426,7 +426,7 @@ gebouw_eigenaar_breukdeel["Breukdeel percent van gebouw"] = gebouw_eigenaar_breu
 # format as %
 gebouw_eigenaar_breukdeel["Breukdeel percent van totaal"] = gebouw_eigenaar_breukdeel["Breukdeel percent van totaal"].map("{:.2f}%".format)
 gebouw_eigenaar_breukdeel["Breukdeel percent van gebouw"] = gebouw_eigenaar_breukdeel["Breukdeel percent van gebouw"].map("{:.2f}%".format)
-display(gebouw_eigenaar_breukdeel)
+print(gebouw_eigenaar_breukdeel)
 # %%
 
 #Breukdeel increase per year non-ymere
