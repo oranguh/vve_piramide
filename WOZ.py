@@ -1,16 +1,17 @@
 # WOZ https://www.linkedin.com/pulse/howto-wozwaardeloket-met-python-peter-wieringa/?originalSubdomain=nl
 # https://www.wozwaardeloket.nl/?locatie=1095HM%0092
 # %%
-from collections import namedtuple
-import requests
-from urllib.parse import urlencode, urljoin
-import logging
-from requests.exceptions import RequestException
-import pandas as pd
 import time
 import json
 import os
 import datetime
+from collections import namedtuple
+import requests
+import logging
+from urllib.parse import urlencode, urljoin
+from requests.exceptions import RequestException
+
+import pandas as pd
 import numpy as np
 # %%
 # https://github.com/wpeterw/wozpy/blob/main/wozpy/woz.py

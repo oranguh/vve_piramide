@@ -1,3 +1,6 @@
+# pip install chromedriver_autoinstaller, pdfplumber
+
+# conda install pandas, seaborn, scipy, geopandas, rasterio, selenium, folium, python-dotenv
 name: vve
 channels:
   - conda-forge

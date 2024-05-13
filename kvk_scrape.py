@@ -1,5 +1,9 @@
 import os
+import json
+import time
+
 import pandas as pd
+import numpy as np
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -9,11 +13,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
 
-import numpy as np
 import chromedriver_autoinstaller
-import json
-
-import time
 
 
 # API possible but costs money https://developers.kvk.nl/nl/apply-for-apis?step=api-overview

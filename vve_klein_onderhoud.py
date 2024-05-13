@@ -1,20 +1,20 @@
 #%%
+import ast    
+import time
+
 import pandas as pd
 import seaborn as sns
 import seaborn.objects as so
 import matplotlib.ticker as mtick
 import matplotlib.pyplot as plt
-import ast    
 import plotly.express as px
 import plotly.graph_objects as go
-import time
-
-from dash import jupyter_dash
-
 import dash
 from dash import dcc, html, Input, Output, State, callback, dash_table
+from dash import jupyter_dash
 
 from general_data import MOLUKKEN_GEBOUW, SUMATRAPLANTSOEN_GEBOUW, PORTIEKEN
+
 
 # %%
 

@@ -1,10 +1,11 @@
 #%%
+import ast
+
 import pandas as pd
 import seaborn as sns
 import seaborn.objects as so
 import matplotlib.ticker as mtick
 import matplotlib.pyplot as plt
-import ast
 
 # DEPRECATED NOW INSIDE SCRAPE TWINQ CODE
 

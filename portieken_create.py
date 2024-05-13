@@ -1,12 +1,13 @@
 #%%
-import geopandas as gpd
-import numpy as np
 import os
-from pathlib import Path
-import seaborn as sns
-import pandas as pd
 import json
 import time
+from pathlib import Path
+
+import geopandas as gpd
+import numpy as np
+import seaborn as sns
+import pandas as pd
 
 from general_data import PORTIEKEN, invert_dict
 

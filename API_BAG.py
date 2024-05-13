@@ -1,7 +1,11 @@
 # %%
 
 import os
+import requests
+import time
 import pandas as pd
+
+from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -9,18 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
-import os
-import json
 # import chromedriver_autoinstaller
-
-
-import os
-from dotenv import load_dotenv
-import requests
-
-
-import time
-
 
 
 # %%

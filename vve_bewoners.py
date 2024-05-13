@@ -1,19 +1,20 @@
 
 #%%
 import os
+import ast
+import re
 from pathlib import Path
+
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import seaborn.objects as so
 import matplotlib.ticker as mtick
 import matplotlib.pyplot as plt
-import ast
-import pdfplumber
-import re
-from tabulate import tabulate
 from sklearn.linear_model import LinearRegression
-import numpy as np
+from tabulate import tabulate
 
+import pdfplumber
 from general_data import MOLUKKEN_GEBOUW, SUMATRAPLANTSOEN_GEBOUW, DAKAANBOUW, PORTIEKEN
 
 #%%
