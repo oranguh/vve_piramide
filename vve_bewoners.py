@@ -385,6 +385,8 @@ sns.scatterplot(data=appartementen_df, x="oppervlakte", y="Breukdeel", hue=hue, 
 
 # https://ymere.docufiller.nl/docupage/view/ZHBhZzo1ODcw/ce5fd34420efce57bb2fcf6808c7be2b#page/6
 # omgevingsvergunningen onze buurt.
+# https://zoek.officielebekendmakingen.nl/gmb-2024-184283.html?utm_campaign=20240514&utm_medium=email&utm_source=boub_mo&utm_term=0363
+# https://zoek.officielebekendmakingen.nl/gmb-2021-393488.html
 # per postcode 
 # https://zoek.officielebekendmakingen.nl/resultaten?svel=Publicatiedatum&svol=Aflopend&pg=10&q=(c.product-area==%22officielepublicaties%22)and((((w.organisatietype==%22gemeente%22)and(dt.creator==%22Amsterdam%22))))and(((w.publicatienaam==%22Tractatenblad%22))or((w.publicatienaam==%22Staatsblad%22))or((w.publicatienaam==%22Staatscourant%22))or((w.publicatienaam==%22Gemeenteblad%22))or((w.publicatienaam==%22Provinciaal%20blad%22))or((w.publicatienaam==%22Waterschapsblad%22))or((w.publicatienaam==%22Blad%20gemeenschappelijke%20regeling%22)))and(cql.textAndIndexes=%221095hm%22)&zv=1095hm&col=AlleBekendmakingen&pagina=1
 

@@ -28,14 +28,26 @@ def main():
     reparaties_df = pd.read_csv("datasets/klein_onderhoud_gekoppeld_met_verzoek.csv", index_col=0)
     apartment_df = pd.read_excel("datasets/appartementen_df_complete.xlsx", index_col=0)
 
+    styles = getSampleStyleSheet()
+    
+    # Title
+    title_text = Paragraph(portiek, styles['Title'])
+    # Add a spacer
+    spacer = Spacer(1, 12)
+    # Text
+    elements = [title_text, spacer]
     for portiek in apartment_df["Portiek"].unique():
 
         pathlib.Path('pdfs').mkdir(parents=True, exist_ok=True) 
         report_name = f"pdfs/{portiek}.pdf"
         portiek = portiek
         year = 2023
-        create_pdf_report_portiek(report_name, portiek, reparaties_df, apartment_df, year)
+        elements = create_pdf_report_portiek(report_name, portiek, reparaties_df, apartment_df, year)
 
+
+    # doc = SimpleDocTemplate(report_name, pagesize=letter)
+    doc = SimpleDocTemplate(report_name, pagesize=landscape(letter))
+    doc.build(elements)
 
 def create_pdf_report_portiek(report_name: str, portiek: str, reparaties_df: pd.DataFrame, apartment_df: pd.DataFrame, year: int = None):
 
@@ -50,9 +62,6 @@ def create_pdf_report_portiek(report_name: str, portiek: str, reparaties_df: pd.
         portiek_reparaties = reparaties_df.loc[reparaties_df["Portiek"] == reparaties_df["Portiek"], :].copy()
         apt_portiek_df = apartment_df.copy()
 
-
-    # doc = SimpleDocTemplate(report_name, pagesize=letter)
-    doc = SimpleDocTemplate(report_name, pagesize=landscape(letter))
 
     styles = getSampleStyleSheet()
 
@@ -70,7 +79,7 @@ def create_pdf_report_portiek(report_name: str, portiek: str, reparaties_df: pd.
     text_summary = [f"Aantal apartementen: {len(apt_portiek_df)} ({percentage_van_totaal_apt:.2f}%)"]
     text_summary += [f"\nPercentage Breukdeel: {percentage_breukdeel:.2f}%"]
     text_summary += [f"\nAantal reparaties in {year}: {len(portiek_reparaties)}"]
-    text_summary += [f"\nKosten reparaties {year}: {sum(portiek_reparaties["Debet"])} €"]
+    text_summary += [f"\nKosten reparaties {year}: {sum(portiek_reparaties['Debet'])} €"]
 
     # breakpoint()
 
@@ -152,32 +161,33 @@ def create_pdf_report_portiek(report_name: str, portiek: str, reparaties_df: pd.
     apt_portiek_df.rename(columns=rename_dict, inplace=True)
     apt_portiek_df[f"WOZ/m2"] = apt_portiek_df[f"WOZ/m2"].round(2).astype(str)
 
-    columns_to_show = ["Verzoeknummer", "Datum", "Omschrijving", "Debet", "boekjaar", "Opdracht/contract gegevens",
-                       ]
+    columns_to_show = ["Verzoeknummer", "Datum", "Omschrijving", "Debet", "Appartementsrecht(en)"]
+
     
     columns_to_show2 = ["Verzoeknummer", 
-                    "Omschrijving_reparatie", "Opdracht", "Datum_reparatie", "Appartementsrecht(en)"]
+                    "Omschrijving_reparatie", "Opdracht", "Datum_reparatie", "boekjaar", "Opdracht/contract gegevens"]
 
     table_data = [columns_to_show] + portiek_reparaties[columns_to_show].values.tolist()
-    table_data2 = [columns_to_show2] + portiek_reparaties[columns_to_show2].values.tolist()
+    # table_data2 = [columns_to_show2] + portiek_reparaties[columns_to_show2].values.tolist()
 
-    table_data = table_data + [[""]] + table_data2 
+    table_data = table_data #+ [[""]] + table_data2 
     elements = append_table_pdf(table_data, elements)
 
-    doc.build(elements)
+    return elements
 
 # test
 def append_table_pdf(table_data, elements):
         spacer = Spacer(1, 12)
         table = Table(table_data)
         # Add style to the table
-        # table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        #                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        #                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        #                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        #                            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        #                            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        #                            ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
+        table.setStyle(TableStyle([
+            # ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            # ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            # ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
         elements.append(table)
         elements.append(spacer)
 
