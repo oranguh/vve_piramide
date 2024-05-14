@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Landing Page Title</title>
+    <title>VvE Piramide</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -56,23 +56,60 @@
             font-size: 1.1rem;
             margin-top: 10px;
         }
+
+        /* Dropdown menu style */
+        .dropdown {
+            display: inline-block;
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            padding: 12px 16px;
+            z-index: 1;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
     </style>
 </head>
 
 <body>
     <header>
-        <h1>Welcome to Your Landing Page</h1>
+        <h1>Welcome to the VvE Piramide Landing Page</h1>
     </header>
     <div class="container">
-        <div class="card">
-            <a href="html_file1.html">HTML File 1</a>
-            <p>Description of HTML File 1</p>
+        <div class="dropdown">
+            <button class="dropbtn">Select Year</button>
+            <div class="dropdown-content">
+                <a href="https://oranguh.github.io/vve_piramide/htmls/portieken_All_years.html">all</a>
+                <a href="https://oranguh.github.io/vve_piramide/htmls/portieken_2023.html">2023</a>
+                <a href="portieken_2022.html">2022</a>
+                <a href="portieken_2021.html">2021</a>
+                <a href="portieken_2020.html">2020</a>
+                <a href="portieken_2019.html">2019</a>
+                <a href="portieken_2018.html">2018</a>
+                <a href="portieken_2017.html">2017</a>
+                <a href="portieken_2016.html">2016</a>
+                <!-- Add more years as needed -->
+            </div>
         </div>
-        <div class="card">
-            <a href="html_file2.html">HTML File 2</a>
-            <p>Description of HTML File 2</p>
+        <div class="dropdown">
+            <button class="dropbtn">Select Floor</button>
+            <div class="dropdown-content">
+                <a href="Pyramide_verdieping_0.html">Floor 0</a>
+                <a href="Pyramide_verdieping_1.html">Floor 1</a>
+                <a href="Pyramide_verdieping_2.html">Floor 2</a>
+                <a href="Pyramide_verdieping_3.html">Floor 3</a>
+                <a href="Pyramide_verdieping_4.html">Floor 4</a>
+                <!-- Add more floors as needed -->
+            </div>
         </div>
-        <!-- Add more cards for additional HTML files -->
     </div>
 </body>
 
