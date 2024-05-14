@@ -31,7 +31,7 @@ def main():
     styles = getSampleStyleSheet()
 
     year = "all_years"
-    year = 2023
+    # year = 2023
     report_name = f"pdfs/Rapport_Piramide_{year}.pdf"
     pathlib.Path('pdfs').mkdir(parents=True, exist_ok=True) 
     # Title
@@ -128,7 +128,7 @@ def create_portiek_element(portiek: str, reparaties_df: pd.DataFrame, apartment_
     #     width=450,      # Set the width of the figure
     #     height=700,      # Set the height of the figure
     # )
-    elements = append_image_pdf(fig, elements)
+    elements = append_image_pdf(fig, elements, portiek)
     elements.append(PageBreak())
 
 
@@ -220,10 +220,10 @@ def append_table_pdf(table_data, elements):
         elements.append(spacer)
 
         return elements
-def append_image_pdf(fig: go.Figure, elements):
+def append_image_pdf(fig: go.Figure, elements, portiek):
     pathlib.Path('temp').mkdir(parents=True, exist_ok=True) 
 
-    temp_image_path = "temp/pie.jpeg" 
+    temp_image_path = f"temp/{portiek}.jpeg" 
     fig.write_image(temp_image_path)
 
     image = Image(temp_image_path, width=6*inch, height=4*inch)
