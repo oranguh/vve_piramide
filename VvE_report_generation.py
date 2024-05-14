@@ -29,27 +29,48 @@ def main():
     apartment_df = pd.read_excel("datasets/appartementen_df_complete.xlsx", index_col=0)
 
     styles = getSampleStyleSheet()
-    
+
+    year = "all_years"
+    year = 2023
+    report_name = f"pdfs/Rapport_Piramide_{year}.pdf"
+    pathlib.Path('pdfs').mkdir(parents=True, exist_ok=True) 
     # Title
-    title_text = Paragraph(portiek, styles['Title'])
+    title_text = Paragraph(f"VvE Piramide rapport {year}", styles['Title'])
     # Add a spacer
     spacer = Spacer(1, 12)
     # Text
-    elements = [title_text, spacer]
-    for portiek in apartment_df["Portiek"].unique():
+    logo_image = 'images/piramide_logo.jpeg'
+    frame_width = 400
+    frame_height = 300
+    img = Image(logo_image)
 
-        pathlib.Path('pdfs').mkdir(parents=True, exist_ok=True) 
-        report_name = f"pdfs/{portiek}.pdf"
-        portiek = portiek
-        year = 2023
-        elements = create_pdf_report_portiek(report_name, portiek, reparaties_df, apartment_df, year)
+    # Get the original dimensions of the image
+    img_width, img_height = img.drawWidth, img.drawHeight
+
+    # Calculate the scaling factors
+    scale_x = frame_width / img_width
+    scale_y = frame_height / img_height
+
+    # Choose the smaller scaling factor to maintain aspect ratio
+    scale = min(scale_x, scale_y)
+
+    # Resize the image
+    img.drawWidth = img_width * scale
+    img.drawHeight = img_height * scale
+
+    elements = [title_text, img]
+
+    for portiek in [*apartment_df["Portiek"].unique(), "No portiek defined"]:
+        elements.append(PageBreak())
+        portiek_element = create_portiek_element(portiek, reparaties_df, apartment_df, year)
+        elements += portiek_element
 
 
     # doc = SimpleDocTemplate(report_name, pagesize=letter)
     doc = SimpleDocTemplate(report_name, pagesize=landscape(letter))
     doc.build(elements)
 
-def create_pdf_report_portiek(report_name: str, portiek: str, reparaties_df: pd.DataFrame, apartment_df: pd.DataFrame, year: int = None):
+def create_portiek_element(portiek: str, reparaties_df: pd.DataFrame, apartment_df: pd.DataFrame, year: int = None):
 
     if not year:
         year = "all years"
@@ -57,10 +78,10 @@ def create_pdf_report_portiek(report_name: str, portiek: str, reparaties_df: pd.
     if type(year) == int:
         boekjaar = f"jul-{year} - jun-2024" # NOTE note sure if we will use boekjaar or year... but this decision does matter.
         portiek_reparaties = reparaties_df.loc[(reparaties_df["Jaar"] == year) & (reparaties_df["Portiek"] == portiek), :].copy()
-        apt_portiek_df = apartment_df.loc[apartment_df["Portiek"]==portiek].copy()
     else:
-        portiek_reparaties = reparaties_df.loc[reparaties_df["Portiek"] == reparaties_df["Portiek"], :].copy()
-        apt_portiek_df = apartment_df.copy()
+        portiek_reparaties = reparaties_df.loc[reparaties_df["Portiek"] == portiek, :].copy()
+
+    apt_portiek_df = apartment_df.loc[apartment_df["Portiek"]==portiek].copy()
 
 
     styles = getSampleStyleSheet()
@@ -92,7 +113,7 @@ def create_pdf_report_portiek(report_name: str, portiek: str, reparaties_df: pd.
     #make pie chart of the reparatie tag costs
     fig = px.pie(portiek_reparaties, values='Debet', names='tag')
     # fig.update_layout(
-    #     legend=dict(
+        # legend=dict(
     #         orientation="h",  # Set orientation to horizontal
     #         yanchor="top",    # Anchor to the top
     #         y=1.5            # Adjust the position vertically
@@ -111,21 +132,30 @@ def create_pdf_report_portiek(report_name: str, portiek: str, reparaties_df: pd.
     elements.append(PageBreak())
 
 
-    ### TABLES ###
+    ### APT DETAILS TABLES###
+
+    title_text = Paragraph(f"Appartementen: {portiek}", styles['Title'])
+    elements.append(title_text)
 
     # Table must be list of 
     apt_portiek_df.reset_index(inplace=True)
 
+    if type(year) == int:
+        year_ = year
+    else:
+        year_ = 2023
     rename_dict = {"Appartementsindex": "index",
                    "Tuin aanwezig": "Tuin",
                    "bijdrage_algnw_2023": "bijdrage breukdeel", 
                    "bijdrage_kostennw_2023": "bijdrage vast",
                    "bijdrage_kosten2nw_2023": "bijdrage geen lift",
                    "bijdrage_liftnw_2023": "bijdrage lift",
-                   f"WOZ_{year}": "WOZ", 
-                   f"WOZ_{year}_per_m2": "WOZ/m2"}
+                   f"WOZ_{year_}": "WOZ", 
+                   f"WOZ_{year_}_per_m2": "WOZ/m2"}
 
     apt_portiek_df.rename(columns=rename_dict, inplace=True)
+
+
     apt_portiek_df[f"WOZ/m2"] = apt_portiek_df[f"WOZ/m2"].round(2).astype(str)
 
     columns_to_show = ["Appartement", "index", "Breukdeel", "Bezit Ymere", "Tuin",
@@ -146,22 +176,19 @@ def create_pdf_report_portiek(report_name: str, portiek: str, reparaties_df: pd.
 
     elements.append(PageBreak())
 
+    ### REPARATIES TABLE ###
 
-    ### REPARATIES DETAILS ###
+    title_text = Paragraph(f"Reparaties: {portiek}", styles['Title'])
+    elements.append(title_text)
 
-    rename_dict = {"Appartementsindex": "index",
-                "Tuin aanwezig": "Tuin",
-                "bijdrage_algnw_2023": "bijdrage breukdeel", 
-                "bijdrage_kostennw_2023": "bijdrage vast",
-                "bijdrage_kosten2nw_2023": "bijdrage geen lift",
-                "bijdrage_liftnw_2023": "bijdrage lift",
-                f"WOZ_{year}": "WOZ", 
-                f"WOZ_{year}_per_m2": "WOZ/m2"}
+    rename_dict = {"appartement_simple_list": "Appartement"}
 
-    apt_portiek_df.rename(columns=rename_dict, inplace=True)
-    apt_portiek_df[f"WOZ/m2"] = apt_portiek_df[f"WOZ/m2"].round(2).astype(str)
+    portiek_reparaties.rename(columns=rename_dict, inplace=True)
 
-    columns_to_show = ["Verzoeknummer", "Datum", "Omschrijving", "Debet", "Appartementsrecht(en)"]
+    #truncate descriptions which are too long
+    portiek_reparaties['Omschrijving'] = portiek_reparaties['Omschrijving'].apply(lambda x: x[:45])
+
+    columns_to_show = ["Verzoeknummer", "Datum", "Omschrijving", "Debet", "Appartement"]
 
     
     columns_to_show2 = ["Verzoeknummer", 
@@ -181,6 +208,7 @@ def append_table_pdf(table_data, elements):
         table = Table(table_data)
         # Add style to the table
         table.setStyle(TableStyle([
+            # ('FONT', (0, 0), (-1, -1), "Menlo"),
             # ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             # ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -198,7 +226,7 @@ def append_image_pdf(fig: go.Figure, elements):
     temp_image_path = "temp/pie.jpeg" 
     fig.write_image(temp_image_path)
 
-    image = Image(temp_image_path, width=5*inch, height=3*inch)
+    image = Image(temp_image_path, width=6*inch, height=4*inch)
     elements.append(image)
     return elements
 
