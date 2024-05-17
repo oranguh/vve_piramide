@@ -153,18 +153,25 @@ app.layout = html.Div([
     Input('building-dropdown', 'value')
 )
 def update_output(value):
-    color = "tag"
+    fig = create_reparatie_fig(year_tag_building_sum, value)
+    return fig
+
+
+# run app inline
+# app.run(jupyter_mode='inline')
+# app.run(jupyter_mode='tab')
+app.run(jupyter_mode="external")
+
+
+
+def create_reparatie_fig(year_tag_building_sum, value="Building", jaar="boekjaar"):
     if value in ["Building", "tag"]:
       year_tag_building_sum_ = year_tag_building_sum.copy()
-      # pt = pd.pivot_table(year_tag_building_sum_, columns=['tag', 'Building'], index=['Jaar'], values=['Factuurbedrag'], fill_value=0)
-      # pt.columns = pt.columns.droplevel()
       color = value
       fig = px.bar(year_tag_building_sum_, x=jaar, y='Debet', color=color, hover_data=['tag', 'Building', 'Debet', jaar, 'count'])
 
     else:
       year_tag_building_sum_ = year_tag_building_sum.loc[year_tag_building_sum["Building"]==value, :].copy()
-      # pt = pd.pivot_table(year_tag_building_sum_, columns=['tag'], index=['Jaar'], values=['Factuurbedrag'], fill_value=0)
-      # pt.columns = pt.columns.droplevel()
 
       fig = px.bar(year_tag_building_sum_, x=jaar, y='Debet', color="tag", hover_data=['tag', 'Building', 'Debet', jaar, 'count'])
     # fig.update_xaxes(type='category', categoryorder='array', categoryarray=sorted(year_tag_building_sum_[jaar].unique()))
@@ -181,15 +188,19 @@ def update_output(value):
 
     return fig
 
-
-
-# run app inline
-# app.run(jupyter_mode='inline')
-# app.run(jupyter_mode='tab')
-app.run(jupyter_mode="external")
-
 # %%
-for x,y in merged.loc[merged["Portiek"] == "Tid_80_98"].iterrows():
-    print(y["Datum"], y["Debet"], y["tag"])
+
+merged = pd.read_csv("datasets/klein_onderhoud_gekoppeld_met_verzoek.csv", index_col=0)
+
+jaar = "boekjaar"
+# jaar = "Jaar"
+
+year_tag_building_sum = merged.groupby([jaar, "tag", "Building"])["Debet"].agg(['sum', 'count']).reset_index()
+year_tag_building_sum.rename(columns={"sum": "Debet"}, inplace=True)
+
+for value in ["Molukken", "Plantsoen", "No building defined", "Building", "tag"]:
+    fig = create_reparatie_fig(year_tag_building_sum, value=value, jaar="boekjaar")
+    fig.write_html(f"htmls/reparaties_{value}.html")
+    print(value)
 
 # %%
