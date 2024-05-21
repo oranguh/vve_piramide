@@ -164,31 +164,35 @@ app.run(jupyter_mode="external")
 
 
 
-def create_reparatie_fig(year_tag_building_sum, value="Building", jaar="boekjaar"):
+def create_reparatie_fig(df, value="Building", jaar="boekjaar"):
     if value in ["Building", "tag"]:
-      year_tag_building_sum_ = year_tag_building_sum.copy()
+      df_ = df.copy()
       color = value
-      fig = px.bar(year_tag_building_sum_, x=jaar, y='Debet', color=color, hover_data=['tag', 'Building', 'Debet', jaar, 'count'])
+      fig = px.bar(df_, x=jaar, y='Debet', color=color, hover_data=['tag', 'Building', 'Debet', jaar, 'count'])
 
+    elif value in ["Molukken", "Plantsoen", "No building defined"]:
+      df_ = df.loc[df["Building"]==value, :].copy()
+
+      fig = px.bar(df_, x=jaar, y='Debet', color="tag", hover_data=['tag', 'Building', 'Debet', jaar, 'count'])
+    # fig.update_xaxes(type='category', categoryorder='array', categoryarray=sorted(df_[jaar].unique()))
     else:
-      year_tag_building_sum_ = year_tag_building_sum.loc[year_tag_building_sum["Building"]==value, :].copy()
+       df_ = df.loc[df["Portiek"]==value, :].copy()
+       fig = px.bar(df_, x=jaar, y='Debet', color="tag", hover_data=['tag', 'Debet', jaar, 'count', 'Portiek'])
 
-      fig = px.bar(year_tag_building_sum_, x=jaar, y='Debet', color="tag", hover_data=['tag', 'Building', 'Debet', jaar, 'count'])
-    # fig.update_xaxes(type='category', categoryorder='array', categoryarray=sorted(year_tag_building_sum_[jaar].unique()))
-    
-    # make x-axis ticks always visible, even with missing data
+    # make x-axis ticks always visible, even with missing data, not possible?
     
     fig.update_xaxes(
         type='category',
         categoryorder='array',
-        categoryarray=sorted(year_tag_building_sum_[jaar].unique()),
-        tickvals=list(range(len(sorted(year_tag_building_sum_[jaar].unique())))),
-        ticktext=sorted(year_tag_building_sum_[jaar].unique())
+        categoryarray=sorted(df_[jaar].unique()),
+        tickvals=list(range(len(sorted(df_[jaar].unique())))),
+        ticktext=sorted(df_[jaar].unique())
         )
 
     return fig
 
 # %%
+# Make htmls for "Molukken", "Plantsoen", "No building defined", "Building", "tag"
 
 merged = pd.read_csv("datasets/klein_onderhoud_gekoppeld_met_verzoek.csv", index_col=0)
 
@@ -199,8 +203,21 @@ year_tag_building_sum = merged.groupby([jaar, "tag", "Building"])["Debet"].agg([
 year_tag_building_sum.rename(columns={"sum": "Debet"}, inplace=True)
 
 for value in ["Molukken", "Plantsoen", "No building defined", "Building", "tag"]:
-    fig = create_reparatie_fig(year_tag_building_sum, value=value, jaar="boekjaar")
+    fig = create_reparatie_fig(year_tag_building_sum, value=value, jaar=jaar)
     fig.write_html(f"htmls/reparaties_{value}.html")
     print(value)
+
+# Make htmls for each portiek
+
+for portiek in merged["Portiek"].unique():
+    if "[" in portiek: # not very elegant, perhaps I should json.load... but whatever
+        # NOTE, multiple portieken makes reparaties go missing. misrepresenting data
+        continue
+    year_tag_portiek_sum = merged.groupby([jaar, "tag", "Portiek"])["Debet"].agg(['sum', 'count']).reset_index()
+    year_tag_portiek_sum.rename(columns={"sum": "Debet"}, inplace=True)
+    fig = create_reparatie_fig(year_tag_portiek_sum, value=portiek, jaar=jaar)
+    fig.write_html(f"htmls/reparaties_{portiek}.html")
+    print(portiek)
+
 
 # %%
