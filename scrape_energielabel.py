@@ -83,7 +83,7 @@ def parse_energietext():
     df["energielabel"] = df["energielabel_text"].str.extract(r"energielabel\s(\w)")
     df["WWS"] = df["energielabel_text"].str.extract(r"WWS\s(\d\.\d+)").astype(float)
     df["energie_geldig_tot"] = df["energielabel_text"].str.extract(r"geldig\stot\s(\d\d-\d\d-\d\d\d\d)")
-    # df.drop(columns=["energielabel_text"], inplace=True)
+    df.drop(columns=["energielabel_text"], inplace=True)
     df.to_excel("datasets/appartementen_df_energielabel.xlsx")
     df.to_csv("datasets/appartementen_df_energielabel.csv")   
     
