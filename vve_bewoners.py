@@ -290,6 +290,7 @@ appartementen_df = pd.merge(appartementen_df, df_WOZ[cols_to_use], left_index=Tr
 columns_WOZ = [x for x in appartementen_df.columns if "WOZ_" in x]
 for col in columns_WOZ:
     appartementen_df[f"{col}_per_m2"] = appartementen_df[col]/appartementen_df["oppervlakte"]
+    appartementen_df[f"{col}_per_m2"] = appartementen_df[f"{col}_per_m2"].round(2)
 
 
 ####################################
