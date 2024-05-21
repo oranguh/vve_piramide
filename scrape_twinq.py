@@ -410,7 +410,7 @@ def merge_facturen_en_verzoeken():
     merged["Portiek"].value_counts()
 
     print("Saving merged verzoek with facturen...")
-    merged.to_csv("datasets/klein_onderhoud_gekoppeld_met_verzoek.csv", encoding="utf-8-sig")
+    merged.to_csv("datasets/klein_onderhoud_gekoppeld_met_verzoek.csv", encoding="utf-8")
     merged.to_excel("datasets/klein_onderhoud_gekoppeld_met_verzoek.xlsx")
 
 
