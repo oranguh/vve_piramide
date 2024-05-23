@@ -1,6 +1,7 @@
 #%%
 from itertools import cycle
 import base64
+import time
 
 import plotly.graph_objects as go
 import plotly.express as px
@@ -27,6 +28,7 @@ from portieken_create import make_portiek_dataset
 # https://deparkes.co.uk/2016/06/10/folium-map-tiles/
 # https://leaflet-extras.github.io/leaflet-providers/preview/
 # https://docs.mapbox.com/api/maps/styles/
+current_year = time.localtime().tm_year
 
 mapbox_api_key = 'pk.eyJ1Ijoib3Jhbmd1aCIsImEiOiJjanNxNWthYjgxMHo0NDRyMjc5MnM1c2VwIn0.oydc_gZ6NRz7H_ny4yp0Fw'
 tileset_ID_str = "streets-v11"
@@ -50,7 +52,7 @@ verdieping = 2
 latest_year = "2023"
 
 # Open the GeoTIFF file
-tiff_path = f'/Users/mah/apartment_geometries/blueprints/verdieping_0.tif'
+tiff_path = f'geo_features/verdieping_0.tif'
 
 dataset = rasterio.open(tiff_path)
 
@@ -88,7 +90,7 @@ image_overlay = ImageOverlay(
 
 
 #TODO FIX THE PLATTEGRONDEN BOUNDS
-tiff_path = f'/Users/mah/apartment_geometries/blueprints/verdieping_{verdieping}.tif'
+tiff_path = f'geo_features/verdieping_{verdieping}.tif'
 
 other_floor = rasterio.open(tiff_path)
 
@@ -99,7 +101,7 @@ image_overlay = ImageOverlay(
     bounds=[(other_floor.bounds.bottom, other_floor.bounds.left), (other_floor.bounds.top, other_floor.bounds.right)],
     opacity=.6,
     colormap=lambda x: (x, x, x, x),  # Transparent colormap
-    name="Plattegrond verdieping: {verdieping}"
+    name=f"Plattegrond verdieping: {verdieping}"
 ).add_to(m)
 
 # TODO interactive plotting https://geopandas.org/en/stable/docs/user_guide/interactive_mapping.html
@@ -109,7 +111,7 @@ apartment_polygons = None
 
 for verdieping_ in range(0, 5):
     print(verdieping_)
-    goejson_filepath = f"/Users/mah/apartment_geometries/apartment_geojsons/apartments_verdieping_{verdieping_}.geojson"
+    goejson_filepath = f"geo_features/apartments_verdieping_{verdieping_}.geojson"
     geojson = gpd.read_file(goejson_filepath)
     if apartment_polygons is None:
         apartment_polygons = geojson
@@ -283,16 +285,24 @@ merged = pd.read_csv("datasets/klein_onderhoud_gekoppeld_met_verzoek.csv", index
 #make portieken geo html. Combined with the reparations data, filtered by year
 
 # NOTE currently only works with years not with fiscal year
+# NOTE redo with fiscal year
+
+#fiscal years have the form jul-{year} - jun-{year+1}
+use_fiscal = True
 for year in list(range(2016, 2024)) + ["All_years"]:
-# for year in ["All_years"]:
-    goejson_filepath = f"/Users/mah/apartment_geometries/apartment_geojsons/portieken.geojson"
+    fiscal_year = f"jul-{year} - jun-{year+1}"
+    
+    goejson_filepath = f"geo_features/portieken.geojson"
     portieken_polygons = gpd.read_file(goejson_filepath)
 
     portieken = portieken_polygons[["name", "geometry"]].set_index("name")
-    portieken
+    # NOTE portieken have the portieken as the index.
 
     # portieken_ = pd.read_csv("portieken_met_reparatie_ids.csv", index_col=0)
-    portieken_ = make_portiek_dataset(years = [year])
+    if use_fiscal:
+        portieken_ = make_portiek_dataset(years = [fiscal_year], current_year = current_year, use_fiscal=use_fiscal)
+    else:
+        portieken_ = make_portiek_dataset(years = [year], current_year = current_year)
 
 
     portieken = portieken.merge(portieken_, left_index=True, right_index=True, how="left")
@@ -341,7 +351,10 @@ for year in list(range(2016, 2024)) + ["All_years"]:
                                 zoom_on_click=True,
                                 control=False)
         
-        if type(year) == int:
+        # NOTE portieken_reparaties have the repairs as index. So we can filter on the portiek and year if year is specified
+        if use_fiscal:
+            portiek_reparaties = merged.loc[(merged["boekjaar"] == fiscal_year) & (merged["Portiek"] == row["Portiek"]), :].copy()
+        elif type(year) == int:
             portiek_reparaties = merged.loc[(merged["Jaar"] == year) & (merged["Portiek"] == row["Portiek"]), :].copy()
         else:
             portiek_reparaties = merged.loc[merged["Portiek"] == row["Portiek"], :].copy()
@@ -372,8 +385,12 @@ for year in list(range(2016, 2024)) + ["All_years"]:
         # Encode the image as base64
         fig_base64 = base64.b64encode(image_bytes).decode()
 
+        if use_fiscal:
+            title = fiscal_year
+        else:
+            title = year
         html = f"""
-        <h1> {year}</h1>
+        <h1> {title}</h1>
         <h1> {row['Portiek']}</h1>
         <img src="data:image/png;base64,{fig_base64}" style="margin-left: 0px;">
         <table>
@@ -410,12 +427,12 @@ for year in list(range(2016, 2024)) + ["All_years"]:
                 <td>{row['percentage_Ymere']:.0f}%</td>
             </tr>
             <tr>
-                <td>Totale WOZ 2022</td>
-                <td>{row['Totale_WOZ_2022']:.0f} €</td>
+                <td>Totale WOZ {current_year-1}</td>
+                <td>{row[f'Totale_WOZ_{current_year-1}']:.0f} €</td>
             </tr>
             <tr>
-                <td>Gemiddelde WOZ 2022</td>
-                <td>{row['Gemiddelde_WOZ_2022']:.2f} €</td>
+                <td>Gemiddelde WOZ {current_year-1}</td>
+                <td>{row[f'Gemiddelde_WOZ_{current_year-1}']:.2f} €</td>
             </tr>
             <tr>
                 <td>REPARATIE IDS</td>
@@ -481,7 +498,7 @@ for year in list(range(2016, 2024)) + ["All_years"]:
 
 
     folium.LayerControl(collapsed=False).add_to(m)
-    m.save(f"htmls/portieken_{year}.html")
+    m.save(f"htmls/portieken_{title}.html")
 
 
 # %%

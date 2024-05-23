@@ -18,7 +18,9 @@ portiek_inverted
 
 #%%
 
-def make_portiek_dataset(years: list = None):
+def make_portiek_dataset(years: list = None, use_fiscal=False, current_year=None):
+    if not current_year:
+        current_year = time.localtime().tm_year
     # initial dataset, including non defined portieken and additional row for cases where mutliple portieken are defined (which really should not be allowed)
     portiek_df = pd.DataFrame(index=[*set(PORTIEKEN.values()), "Multiple portieken", "No portiek defined"])
     portiek_df["Portiek"] = portiek_df.index
@@ -32,21 +34,28 @@ def make_portiek_dataset(years: list = None):
     klein_onderhoud = pd.read_excel('datasets/klein_onderhoud_gekoppeld_met_verzoek.xlsx', index_col=0)
     klein_onderhoud["Portiek"] = klein_onderhoud["Portiek"].apply(lambda x: "Multiple portieken" if "['" in x else x)
     
-    if years:
-        print(f"Filtering on years: {years}")
-        # we only have data from 2016 onwards
-        current_year = time.localtime().tm_year
-        valid_years = list(range(2016, current_year+1))
 
+    if use_fiscal:
+        print(f"Filtering on fiscal years: {years}")
+
+        # we only have data from 2016 onwards
+        valid_fiscalyears = [f"jul-{x} - jun-{x+1}" for x in list(range(2016, current_year+1))]
+
+        if all(year not in valid_fiscalyears for year in years):
+            print(f"Years {years} not in valid range of {valid_fiscalyears} skipping filtering")
+        else:       
+            klein_onderhoud = klein_onderhoud.loc[klein_onderhoud["boekjaar"].isin(years), :]
+
+    else:
+        print(f"Filtering on years: {years}")
+
+        # we only have data from 2016 onwards
+        valid_years = list(range(2016, current_year+1))
         if all(year not in valid_years for year in years):
             print(f"Years {years} not in valid range of {valid_years} skipping filtering")
 
         else:
             klein_onderhoud = klein_onderhoud.loc[klein_onderhoud["Jaar"].isin(years), :]
-        # if year not in valid_years:
-        #     print(f"Year {year} not in valid range of {valid_years} skipping filtering")
-        # else:
-        #     klein_onderhoud = klein_onderhoud.loc[klein_onderhoud["Jaar"]==year, :]
 
 
     portiek_df["Reparatie_counts"] = klein_onderhoud["Portiek"].value_counts().astype(int)
@@ -69,11 +78,11 @@ def make_portiek_dataset(years: list = None):
     groupby_oppervlakte = appartments_df[["Portiek", "oppervlakte"]].groupby("Portiek").sum()
     portiek_df["Totale_oppervlakte"] = portiek_df["Portiek"].apply(lambda x: groupby_oppervlakte.loc[x, "oppervlakte"] if x in groupby_oppervlakte.index else np.nan)
 
-    groupby_woz_2022_sum = appartments_df[["Portiek", "WOZ_2022"]].groupby("Portiek").sum()
-    groupby_woz_2022_mean = appartments_df[["Portiek", "WOZ_2022"]].groupby("Portiek").mean()
+    groupby_woz_sum = appartments_df[["Portiek", f"WOZ_{current_year-1}"]].groupby("Portiek").sum()
+    groupby_woz_mean = appartments_df[["Portiek", f"WOZ_{current_year-1}"]].groupby("Portiek").mean()
 
-    portiek_df["Totale_WOZ_2022"] = portiek_df["Portiek"].apply(lambda x: groupby_woz_2022_sum.loc[x, "WOZ_2022"] if x in groupby_woz_2022_sum.index else np.nan)
-    portiek_df["Gemiddelde_WOZ_2022"] = portiek_df["Portiek"].apply(lambda x: groupby_woz_2022_mean.loc[x, "WOZ_2022"] if x in groupby_woz_2022_mean.index else np.nan)
+    portiek_df[f"Totale_WOZ_{current_year-1}"] = portiek_df["Portiek"].apply(lambda x: groupby_woz_sum.loc[x, f"WOZ_{current_year-1}"] if x in groupby_woz_sum.index else np.nan)
+    portiek_df[f"Gemiddelde_WOZ_{current_year-1}"] = portiek_df["Portiek"].apply(lambda x: groupby_woz_mean.loc[x, f"WOZ_{current_year-1}"] if x in groupby_woz_mean.index else np.nan)
 
     portiek_df["Reparatiekosten_per_breukdeel"] = portiek_df["reparatie_kosten_totaal"]/portiek_df["Breukdeel_portiek"]
     portiek_df["Reparatiekosten_per_appartement"] = portiek_df["reparatie_kosten_totaal"]/portiek_df["apartments_count"]
