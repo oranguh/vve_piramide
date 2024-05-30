@@ -402,7 +402,7 @@ DAKAANBOUW = [
             "Molukkenstraat 541",
             "Molukkenstraat 545",
             "Tidorestraat 78",
-            "Tidorestraat 88",
+            "Tidorestraat 88-A/B",
             "Tidorestraat 112",
             "Tidorestraat 126",
             "Sumatraplaantsoen 22-D",
