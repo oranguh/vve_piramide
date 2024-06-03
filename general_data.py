@@ -399,16 +399,15 @@ DAKAANBOUW = [
             "Molukkenstraat 519",
             "Molukkenstraat 523",
             "Molukkenstraat 541",
-            "Molukkenstraat 541",
             "Molukkenstraat 545",
             "Tidorestraat 78",
             "Tidorestraat 88-A/B",
             "Tidorestraat 112",
             "Tidorestraat 126",
-            "Sumatraplaantsoen 22-D",
-            "Sumatraplaantsoen 30-C",
-            "Sumatraplaantsoen 34-D",
-            "Sumatrasstraat 229-D",]
+            "Sumatraplantsoen 22-D",
+            "Sumatraplantsoen 30-C",
+            "Sumatraplantsoen 36-D",
+            "Sumatrastraat 229-D",]
 
 TUINDAANBOUW = []
 
