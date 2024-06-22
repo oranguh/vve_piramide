@@ -3,6 +3,7 @@ import io
 import shutil
 import time
 import ast    
+import platform
 
 import pandas as pd
 from selenium import webdriver
@@ -15,21 +16,22 @@ from selenium.webdriver.common.keys import Keys
 import chromedriver_autoinstaller
 
 from general_data import MOLUKKEN_GEBOUW, SUMATRAPLANTSOEN_GEBOUW, DAKAANBOUW, PORTIEKEN
-
+from keys_and_passwords import username_twinq, password_twinq
 
 def main():
     login_url = 'https://ymere.twinq.nl/apex/f?p=TPL:LOGIN_DESKTOP:::::TPL_APP:EPL'
     # login_url = 'YOUR_LOGIN_URL'
-    username = 'YAHeuvel7Y'
-    password = 'H3lloW0rld'
 
     chromedriver_autoinstaller.install()
 
     # Use appropriate driver for your browser (Chrome, Firefox, etc.)
-    driver = webdriver.Chrome()  # or webdriver.Firefox() depending on your browser
+    if True:
+        driver = webdriver.Chrome()  # or webdriver.Firefox() depending on your browser
+    else:
+        options = webdriver.FirefoxOptions()
+        driver = webdriver.Firefox(options=options)
 
     driver.get(login_url)
-
     # Find login form elements and submit
     wait = WebDriverWait(driver, 15)  # Adjust the wait time as needed
 
@@ -38,8 +40,8 @@ def main():
     submit_button = wait.until(EC.element_to_be_clickable((By.ID, 'B286311067721006444')))
 
     # Fill in the login form
-    username_field.send_keys(username)
-    password_field.send_keys(password)
+    username_field.send_keys(username_twinq)
+    password_field.send_keys(password_twinq)
 
     # Submit the form
     submit_button.click()
@@ -48,12 +50,12 @@ def main():
     # Follow the previous scraping steps after this point using Selenium.
 
     # make the datasets which for all invoices which have been paid
-    # financien_Grootboekrekeningen_KleinOnderhoud(driver, wait) # will give error if the latest year is still empty
+    financien_Grootboekrekeningen_KleinOnderhoud(driver, wait) # will give error if the latest year is still empty
     parse_kleinonderhoud_facturen_link()
     
     
     # # make dataset for all the repair requests, some of which will be performed and have a corresponding invoice
-    # gebouwBeheer_reparatieverzoek_alle(driver, wait)
+    gebouwBeheer_reparatieverzoek_alle(driver, wait)
     parse_reparatieverzoek_link()
 
     driver.quit()
@@ -77,6 +79,8 @@ def financien_Grootboekrekeningen_KleinOnderhoud(driver, wait):
 
     jaren = [f"jul-{i} - jun-{i+1}" for i in range(2016, 2024)]
     # jaren = ["jul-2018 - jun-2019", "jul-2023 - jun-2024"]
+    # NOTE important to set dates! NOTE
+    jaren = [f"jul-{i} - jun-{i+1}" for i in range(2022, 2024)]
 
 
     df_klein_onderhoud_totaal = pd.DataFrame() #make from scratch each time
@@ -107,9 +111,21 @@ def financien_Grootboekrekeningen_KleinOnderhoud(driver, wait):
 
         # go to relevant detail finances page
         detailed_page_name = "Dagelijks onderhoud - Klein onderhoud"
+        # NOTE need to scroll down to find the link now...
+
+        element = wait.until(EC.presence_of_element_located((By.XPATH, '//tr[@data-rownum=1]')))
+    
+        # click the element
+        actions.click(element).perform()
+        # actions.send_keys(Keys.PAGE_DOWN).perform()
+
+        for j in range(5):
+            print(f"scrolling: {j}")
+            for i in range(40):
+                actions.key_down(Keys.ARROW_DOWN).perform()
+            time.sleep(5)
 
         link_to_detailed_page = wait.until(EC.presence_of_element_located((By.LINK_TEXT , detailed_page_name)))
-
         href_attribute = link_to_detailed_page.get_attribute("href")
 
         # Navigate to the link
@@ -125,7 +141,11 @@ def financien_Grootboekrekeningen_KleinOnderhoud(driver, wait):
         download_table_button.click()
         time.sleep(3)
         
-        downloaded_file = "/Users/mah/Downloads/grootboekkaart.csv" # NOTE this is dangerous. Perhaps there's an alternative
+        if platform.system() == "Windows":
+            downloaded_file = "C:/Users/marco/Downloads/grootboekkaart.csv"
+        else: 
+            downloaded_file = "/Users/mah/Downloads/grootboekkaart.csv" # NOTE this is dangerous. Perhaps there's an alternative
+        
         newfile = f"datasets/dagelijks_onderhoud_jaren/VvE_piramide__{detailed_page_name}_{jaar}.csv"
         shutil.move(downloaded_file, newfile)
         time.sleep(1)
@@ -288,10 +308,12 @@ def parse_reparatieverzoek_link():
 
     if "Unnamed: 0" in df.columns:
         df.drop(columns=["Unnamed: 0"], inplace=True)
+    if 'Verzoek Sorted Descending' in df.columns:
+        df.rename(columns={'Verzoek Sorted Descending': 'Verzoek'}, inplace=True)
     """ 
     columns:
 
-    'Verzoek Sorted Descending', 'Omschrijving',
+    'Verzoek', 'Omschrijving',
     'Gemeld door', 'Type', 'Status', 'Datum', 'Opdracht',
     'Appartementsrecht(en)', 'Eigenaar(s)'
 
@@ -375,17 +397,19 @@ def merge_facturen_en_verzoeken():
     # convert appartement_simple_list to actual list
     reparaties['appartement_simple_list'] = reparaties['appartement_simple_list'].apply(ast.literal_eval)
 
+    if "Verzoek Sorted Descending" in reparaties.columns:
+        reparaties.rename(columns={'Verzoek Sorted Descending': 'Verzoek'}, inplace=True)
 
-    data_columns = ["Verzoek Sorted Descending", "Omschrijving", "Type", "Status"
+    data_columns = ["Verzoek", "Omschrijving", "Type", "Status"
                     , "Datum", "Opdracht", "Appartementsrecht(en)", "Eigenaar(s)",
                     "appartement_simple_list", "count of apartments in row"]
     # NOTE column "gemeld door" missing in 2024 twinq site?
     reparaties = reparaties[data_columns]
 
-    # link column: Verzoek Sorted Descending
-    reparaties["Verzoek Sorted Descending"] = reparaties["Verzoek Sorted Descending"].astype(str)
+    # link column: Verzoek
+    reparaties["Verzoek"] = reparaties["Verzoek"].astype(str)
 
-    merged = kleinonderhoud.set_index("verzoeknummer_link").join(reparaties.set_index("Verzoek Sorted Descending"), rsuffix="_reparatie")
+    merged = kleinonderhoud.set_index("verzoeknummer_link").join(reparaties.set_index("Verzoek"), rsuffix="_reparatie")
     
     # link column: verzoeknummer_link
     merged.index.name = 'Verzoeknummer'
