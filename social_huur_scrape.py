@@ -20,11 +20,11 @@ import chromedriver_autoinstaller
 # this site only lets you get data from the past year. So doing it every so often is wise if you want tu to date data.
 
 
-if False: #make the dataset. Manually setting dates required.
+if True: #make the dataset. Manually setting dates required.
     kvk_page = "https://amsterdam.mijndak.nl/verhuurd"
 
 
-    appartments_df = pd.read_csv("appartementen_df_complete.csv")
+    appartments_df = pd.read_csv("datasets/appartementen_df_complete.csv")
     kvk_dict = {}
 
 
@@ -45,7 +45,9 @@ if False: #make the dataset. Manually setting dates required.
     privacy_button.click()
 
 
-    time.sleep(30)
+    for i in range(60):  # NOTE USER MANUALLY SETS DATES HERE FOR SEARCH
+        print(60-i)
+        time.sleep(1)
 
     table_path = "/html/body/div[1]/div/div/div/div/div[1]/div/div/div/div[3]/div[2]/div[2]/div/div/table"
     table = wait.until(EC.presence_of_element_located((By.XPATH, table_path)))

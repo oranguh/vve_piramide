@@ -17,8 +17,6 @@ from selenium.webdriver.common.keys import Keys
 
 
 # %%
-test_key = "l7f4724a678ad3446e9bbef9b0179f7bd3"
-# prod_key = "l7e2bdd200b9d4495db5d695aea52ddc74"
 
 load_dotenv()
 API_KEY = os.getenv('API_KEY')
