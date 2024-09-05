@@ -18,9 +18,6 @@ import pdfplumber
 from general_data import MOLUKKEN_GEBOUW, SUMATRAPLANTSOEN_GEBOUW, DAKAANBOUW, PORTIEKEN
 
 #%%
-### NOTE Dit is alleen een dataset met HUIDIGE eigenaren. Dus niet de historie van alle verkopen.
-### private verkoop tussen particulieren zouden dan hier onderbelicht worden. 
-### bijv. als een woning 3x verkocht is tussen particulieren, dan staat alleen de laatste eigenaar in deze dataset.
 
 encoding = "ISO-8859-1"
 appartementen_df = pd.read_csv("datasets/overzicht_eigenaarsregister.csv", sep=";", encoding=encoding)
@@ -85,6 +82,8 @@ appartementen_df["Portiek"] = appartementen_df.index.map(lambda x: PORTIEKEN[x] 
 # appartementen_df["breukdeel"] = appartementen_df.index.map(lambda x: appartementen_df.loc[appartementen_df["Appartement"]==x, "Breukdeel"].values[0])
 
 # weird situation where kpn finance amersfoort pays for vve of some ymere apartments. in 2017, so I remove 2017
+
+
 years = [2016, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
 
 for year in years:
@@ -208,29 +207,53 @@ floor_2 = ["A-" + str(x).zfill(3) for x in range(70,108)]
 floor_3 = ["A-" + str(x).zfill(3) for x in range(108,158)]
 floor_4 = ["A-" + str(x).zfill(3) for x in range(158,178)]
 
-# NOTE EXCEPTIONS, these appartmenindexes have been changed over time, no idea why?
-renamed = {
-    "A-092": "A-178",
-    "A-091": "A-179",
-    "A-019": "A-180",
-    "A-093": "A-181",
-    "A-053": "A-182",
-    "A-140": "A-183",
-    "A-054": "A-184",
-    "A-142": "A-185",
-    "A-090": "A-186",
-    "A-055": "A-187",
-}
-inv_renamed = {v: k for k, v in renamed.items()}
+floor_0.extend(["A-178"])
+floor_1.extend(["A-179", "A-180", "A-181"])
+floor_2.extend(["A-182", "A-183", "A-184", "A-185"])
+floor_3.extend(["A-186", "A-187"])
 
-# we use the old index to use as a key to match with the geodata. Which is based off of old blueprints which use the old index
-appartementen_df["Appartementsindex_oud"] = appartementen_df["Appartementsindex"].apply(lambda x: inv_renamed[x] if x in inv_renamed else x)
+floor_0.remove("A-019")
 
-floor_0 = [renamed[x] if x in renamed else x for x in floor_0]
-floor_1 = [renamed[x] if x in renamed else x for x in floor_1]
-floor_2 = [renamed[x] if x in renamed else x for x in floor_2]
-floor_3 = [renamed[x] if x in renamed else x for x in floor_3]
-floor_4 = [renamed[x] if x in renamed else x for x in floor_4]
+floor_1.remove("A-053")
+floor_1.remove("A-054")
+floor_1.remove("A-055")
+
+floor_2.remove("A-090")
+floor_2.remove("A-091")
+floor_2.remove("A-092")
+floor_2.remove("A-093")
+
+floor_3.remove("A-140")
+floor_3.remove("A-142")
+
+# NOTE EXCEPTIONS, these appartmenindexes have been changed over time, no idea why? 
+# NOTE Because these had wrong addresses in the akte, and were corrected only in 2014
+
+if False: #DEPRECATED
+    renamed = {
+        "A-092": "A-178",
+        "A-091": "A-179",
+        "A-019": "A-180",
+        "A-093": "A-181",
+        "A-053": "A-182",
+        "A-140": "A-183",
+        "A-054": "A-184",
+        "A-142": "A-185",
+        "A-090": "A-186",
+        "A-055": "A-187",
+    }
+    inv_renamed = {v: k for k, v in renamed.items()}
+
+    # we use the old index to use as a key to match with the geodata. Which is based off of old blueprints which use the old index
+    # NOTE no, we need to updat the geodata to the newest blueprint. Which could only be found hidden in the depths of the assembly notes. For some arcane reason.
+
+    appartementen_df["Appartementsindex_oud"] = appartementen_df["Appartementsindex"].apply(lambda x: inv_renamed[x] if x in inv_renamed else x)
+
+    floor_0 = [renamed[x] if x in renamed else x for x in floor_0]
+    floor_1 = [renamed[x] if x in renamed else x for x in floor_1]
+    floor_2 = [renamed[x] if x in renamed else x for x in floor_2]
+    floor_3 = [renamed[x] if x in renamed else x for x in floor_3]
+    floor_4 = [renamed[x] if x in renamed else x for x in floor_4]
 
 
 appartementen_df.reset_index(inplace=True) 
@@ -245,11 +268,6 @@ appartementen_df.loc[floor_4, "verdieping"] = 4
 
 # for row in appartementen_df[["verdieping"]].iterrows():
 #     print(row)
-
-
-# %%
-
-
 
 
 
@@ -368,6 +386,8 @@ sns.scatterplot(data=appartementen_df, x="oppervlakte", y="Breukdeel", hue=hue, 
 
 # %%
 
+# https://api.data.amsterdam.nl/v1/docs/index.html
+
 #TODO https://amsterdam.mijndak.nl/verhuurd verhuizingen binnen social huur
 #done Which apartments have dakopbouw en tuinaanbouw. 
 #DONE gather data on apartment locations e.g. which apartment is on which floor, 
@@ -420,39 +440,64 @@ sns.histplot(data=appartementen_df, x="non-ymere from", ax=ax, discrete=True)
 # rename 2016 xlabel to 1980-2016
 ax.set_xticklabels(["", "1981-2016", "2018", "2021", "2022", "2023", "2024"]) #too hacky and hardcoded
 # %%
-jaar = 2024
-gebouw_eigenaar_breukdeel = appartementen_df[["Gebouw", jaar, "Breukdeel"]].groupby(["Gebouw", jaar]).sum()
-gebouw_eigenaar_breukdeel["aantal apartementen"] = appartementen_df[["Gebouw", jaar]].groupby("Gebouw").value_counts().sort_index().to_frame()
-gebouw_eigenaar_breukdeel["Breukdeel percent van totaal"] = gebouw_eigenaar_breukdeel["Breukdeel"]/gebouw_eigenaar_breukdeel["Breukdeel"].sum()*100
-gebouw_eigenaar_breukdeel["Breukdeel percent van gebouw"] = gebouw_eigenaar_breukdeel["Breukdeel"]/gebouw_eigenaar_breukdeel.groupby("Gebouw")["Breukdeel"].transform("sum")*100
+# NOTE the df has to be in longform (i.e. non-bezit ymere from year has to have a column per year)
+if False:
+    jaar = 2024
+    gebouw_eigenaar_breukdeel = appartementen_df[["Gebouw", jaar, "Breukdeel"]].groupby(["Gebouw", jaar]).sum()
+    gebouw_eigenaar_breukdeel["aantal apartementen"] = appartementen_df[["Gebouw", jaar]].groupby("Gebouw").value_counts().sort_index().to_frame()
+    gebouw_eigenaar_breukdeel["Breukdeel percent van totaal"] = gebouw_eigenaar_breukdeel["Breukdeel"]/gebouw_eigenaar_breukdeel["Breukdeel"].sum()*100
+    gebouw_eigenaar_breukdeel["Breukdeel percent van gebouw"] = gebouw_eigenaar_breukdeel["Breukdeel"]/gebouw_eigenaar_breukdeel.groupby("Gebouw")["Breukdeel"].transform("sum")*100
 
-# format as %
-gebouw_eigenaar_breukdeel["Breukdeel percent van totaal"] = gebouw_eigenaar_breukdeel["Breukdeel percent van totaal"].map("{:.2f}%".format)
-gebouw_eigenaar_breukdeel["Breukdeel percent van gebouw"] = gebouw_eigenaar_breukdeel["Breukdeel percent van gebouw"].map("{:.2f}%".format)
-print(gebouw_eigenaar_breukdeel)
+    # format as %
+    gebouw_eigenaar_breukdeel["Breukdeel percent van totaal"] = gebouw_eigenaar_breukdeel["Breukdeel percent van totaal"].map("{:.2f}%".format)
+    gebouw_eigenaar_breukdeel["Breukdeel percent van gebouw"] = gebouw_eigenaar_breukdeel["Breukdeel percent van gebouw"].map("{:.2f}%".format)
+    print(gebouw_eigenaar_breukdeel)
+
+
+    #Breukdeel increase per year non-ymere
+
+    non_ymere_from = appartementen_df["non-ymere from"].value_counts().sort_index()
+
+
+    print("Breukdeel niet-ymere per jaar")
+    for year in years:
+        if year in [2017, 2019, 2020]:
+            continue
+
+        breukdeel = appartementen_df.loc[appartementen_df[year]=="Particulier", "Breukdeel"].sum()
+        bruekdeel_perc = breukdeel / breukdeel_totaal * 100
+        print(f"Tot {year}, Breukdeel {breukdeel}/{breukdeel_totaal}, aantal verkocht {non_ymere_from[year]} percentage: {bruekdeel_perc:.2f}%")
+
 # %%
 
-#Breukdeel increase per year non-ymere
+appartementen_df = pd.read_excel("datasets/appartementen_df_complete.xlsx", index_col=0)
 
-non_ymere_from = appartementen_df["non-ymere from"].value_counts().sort_index()
+if True:
+
+    appartementen_df.at["Sumatraplantsoen 26-C", "Eigenaar"] = "new"
+    appartementen_df.at["Sumatraplantsoen 26-C", "non-ymere from"] = 2024
+
+    appartementen_df.at["Molukkenstraat 427", "Eigenaar"] = "new"
+    appartementen_df.at["Molukkenstraat 427", "non-ymere from"] = 2024
+
+    def add_breukdeel_dakaanbouw(apt_breukdeel, dakaanbouw_flag):
+        if dakaanbouw_flag:
+            return apt_breukdeel + 40
+        return apt_breukdeel
+
+    appartementen_df["Breukdeel"] = appartementen_df.apply(lambda x: add_breukdeel_dakaanbouw(x["Breukdeel"], x["Dakaanbouw"]), axis=1)
+
+totale_breukdeel = appartementen_df["Breukdeel"].sum()
+
+Ymere_breukdeel = appartementen_df.loc[appartementen_df["Eigenaar"]=="Stichting Ymere", "Breukdeel"].sum()
+
+print(f"Ymere heeft {Ymere_breukdeel/totale_breukdeel*100:.2f}% van de woningen in bezit.")
 
 
-print("Breukdeel niet-ymere per jaar")
-for year in years:
-    if year in [2017, 2019, 2020]:
-        continue
-
-    breukdeel = appartementen_df.loc[appartementen_df[year]=="Particulier", "Breukdeel"].sum()
-    bruekdeel_perc = breukdeel / breukdeel_totaal * 100
-    print(f"Tot {year}, Breukdeel {breukdeel}/{breukdeel_totaal}, aantal verkocht {non_ymere_from[year]} percentage: {bruekdeel_perc:.2f}%")
-
-# %%
 appartementen_df.loc[appartementen_df["Eigenaar"]=="Stichting Ymere", ["Eigenaar", "Breukdeel"]]
-# %%
 
 
 
-# %%
 # interpolate percentage into the future
 df = appartementen_df.groupby("non-ymere from").sum()["Breukdeel"].cumsum()
 df = df.to_frame()
@@ -468,23 +513,26 @@ interpolation_df = pd.DataFrame({'Year': years_to_interpolate, 'Predicted_Value'
 interpolation_df["Predicted_Value"] = interpolation_df["Predicted_Value"]/breukdeel_totaal*100
 df["Breukdeel"] = df["Breukdeel"]/breukdeel_totaal*100
 
-# %%
 
 
 # plot line graph for actual data and interpolated data
 
+# return year when we pass 50%
+year_50 = 2028 # 2031 if no dakaanbouw
+
 fig, ax = plt.subplots(figsize=(20, 10))
 sns.lineplot(data=interpolation_df, x="Year", y="Predicted_Value", ax=ax, linestyle='--')
 sns.lineplot(data=df, x="non-ymere from", y="Breukdeel", ax=ax)
+#x-axis should be year
+ax.set_xticks(years_to_interpolate)
 ax.axhline(50, ls='--', color='r')
-ax.axvline(2032, ls='--', color='r')
-ax.set_title("Projectie breukdeel % niet-ymere eigenaren over jaren (2032 passeren wij 50%)")
+ax.axvline(year_50, ls='--', color='r')
+ax.set_title(f"Projectie breukdeel % niet-ymere eigenaren over jaren ({year_50} passeren wij 50%)")
 ax.set_ylabel("Breukdeel %")
 ax.set_xlabel("Jaar")
 plt.show()
-# %%
 
-# for row in appartementen_df[["Eigenaar", "Breukdeel"]].iterrows():
-#     print(row)
-    
+
+
+# %%
 # %%
