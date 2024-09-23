@@ -436,6 +436,8 @@ def merge_facturen_en_verzoeken():
     print("Saving merged verzoek with facturen...")
     merged.to_csv("datasets/klein_onderhoud_gekoppeld_met_verzoek.csv", encoding="utf-8")
     merged.to_excel("datasets/klein_onderhoud_gekoppeld_met_verzoek.xlsx")
+    print("Done saving merged verzoek with facturen...")
+    print("Files can be found as datasets/klein_onderhoud_gekoppeld_met_verzoek.xlsx")
 
 
 def harmonize_missing_values():
