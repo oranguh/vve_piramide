@@ -101,7 +101,7 @@ def create_html_from_table(df, title, filename):
                     "columnDefs": [
                         { 
                             "type": "num",    // Specify the type as "num" for numeric columns
-                            "targets": [0, 1] // Change the targets to the appropriate column indices that contain numeric data
+                            "targets": [6, 7] // Change the targets to the appropriate column indices that contain numeric data
                         }
                     ]
                 }});
