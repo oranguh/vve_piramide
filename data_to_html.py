@@ -14,7 +14,7 @@ def main():
 
     filename_reparaties = "htmls/table_reparaties.html"
 
-    create_html_from_table(df_apts, title_apts, filename_apts)
+    # create_html_from_table(df_apts, title_apts, filename_apts)
     create_html_from_table(df_reparaties, title_reparaties, filename_reparaties)
 
 def create_html_from_table(df, title, filename):
@@ -98,12 +98,6 @@ def create_html_from_table(df, title, filename):
                         }}
                     }},
                     "fixedHeader": true,
-                    "columnDefs": [
-                        { 
-                            "type": "num",    // Specify the type as "num" for numeric columns
-                            "targets": [6, 7] // Change the targets to the appropriate column indices that contain numeric data
-                        }
-                    ]
                 }});
 
                 // Apply the search
