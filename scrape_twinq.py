@@ -4,6 +4,7 @@ import shutil
 import time
 import ast    
 import platform
+from pathlib import Path
 
 import pandas as pd
 from selenium import webdriver
@@ -50,12 +51,12 @@ def main():
     # Follow the previous scraping steps after this point using Selenium.
 
     # make the datasets which for all invoices which have been paid
-    financien_Grootboekrekeningen_KleinOnderhoud(driver, wait) # will give error if the latest year is still empty
+    # financien_Grootboekrekeningen_KleinOnderhoud(driver, wait) # will give error if the latest year is still empty
     parse_kleinonderhoud_facturen_link()
     
     
     # # make dataset for all the repair requests, some of which will be performed and have a corresponding invoice
-    gebouwBeheer_reparatieverzoek_alle(driver, wait)
+    # gebouwBeheer_reparatieverzoek_alle(driver, wait)
     parse_reparatieverzoek_link()
 
     driver.quit()
@@ -80,7 +81,7 @@ def financien_Grootboekrekeningen_KleinOnderhoud(driver, wait):
     jaren = [f"jul-{i} - jun-{i+1}" for i in range(2016, 2024)]
     # jaren = ["jul-2018 - jun-2019", "jul-2023 - jun-2024"]
     # NOTE important to set dates! NOTE
-    jaren = [f"jul-{i} - jun-{i+1}" for i in range(2022, 2024)]
+    jaren = [f"jul-{i} - jun-{i+1}" for i in range(2024, 2025)]
 
 
     df_klein_onderhoud_totaal = pd.DataFrame() #make from scratch each time
@@ -356,7 +357,16 @@ def parse_kleinonderhoud_facturen_link():
     Data has been scraped off twinq and presented in usable format. 
 
     """
-    kleinonderhoud = pd.read_csv("datasets/VvE_piramide__Dagelijks onderhoud - Klein onderhoud.csv")
+    #parse through all years and create a dataset for all the invoices
+    kleinonderhoud = None
+    for excel_file in Path("datasets/dagelijks_onderhoud_jaren").rglob("*.csv"):
+        print(excel_file)
+        if kleinonderhoud is None:
+            kleinonderhoud = pd.read_csv(excel_file, sep=",")
+        else:
+            kleinonderhoud = pd.concat([kleinonderhoud, pd.read_csv(excel_file, sep=",")])  
+
+    # kleinonderhoud = pd.read_csv("datasets/VvE_piramide__Dagelijks onderhoud - Klein onderhoud.csv")
     
     kleinonderhoud["Factuurbedrag"] = kleinonderhoud["Factuurbedrag"].str.replace(".", "", regex=False).str.replace(",", ".", regex=False).str.replace("€", "", regex=False).astype(float)
     kleinonderhoud["Debet"] = kleinonderhoud["Debet"].str.replace(".", "", regex=False).str.replace(",", ".", regex=False).str.replace("", "", regex=False).astype(float)
