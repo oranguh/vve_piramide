@@ -15,7 +15,7 @@ from sklearn.linear_model import LinearRegression
 from tabulate import tabulate
 
 import pdfplumber
-from general_data import MOLUKKEN_GEBOUW, SUMATRAPLANTSOEN_GEBOUW, DAKAANBOUW, PORTIEKEN
+from general_data import MOLUKKEN_GEBOUW, SUMATRAPLANTSOEN_GEBOUW, DAKAANBOUW, PORTIEKEN, KOLOMMEN
 
 #%%
 
@@ -79,6 +79,7 @@ appartementen_df["Dakaanbouw"] = appartementen_df.index.map(lambda x: True if x 
 
 #portiek
 appartementen_df["Portiek"] = appartementen_df.index.map(lambda x: PORTIEKEN[x] if x in PORTIEKEN else None)
+appartementen_df["Kolom"] = appartementen_df.index.map(lambda x: KOLOMMEN[x] if x in KOLOMMEN else None)
 # appartementen_df["breukdeel"] = appartementen_df.index.map(lambda x: appartementen_df.loc[appartementen_df["Appartement"]==x, "Breukdeel"].values[0])
 
 # weird situation where kpn finance amersfoort pays for vve of some ymere apartments. in 2017, so I remove 2017

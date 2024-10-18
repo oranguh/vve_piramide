@@ -20,7 +20,7 @@ import seaborn as sns
 import pandas as pd
 import json
 
-from general_data import PORTIEKEN, invert_dict
+from general_data import PORTIEKEN, invert_dict, KOLOMMEN, DAKAANBOUW
 from portieken_create import make_portiek_dataset
 
 from keys_and_passwords import mapbox_api_key
@@ -66,11 +66,13 @@ def main():
     # Create a Folium map centered around the bounding box
     map_center = [gdf.geometry.y.mean(), gdf.geometry.x.mean()]
 
-    verdieping = 4
+    verdieping = 3
 
-    make_verdiepingen_html(map_center, tiles_sat, attr_sat, tiles_mapbox, attr_mapbox, tiles_mapbox_sat, dataset, verdieping, latest_year)
+    # make_verdiepingen_html(map_center, tiles_sat, attr_sat, tiles_mapbox, attr_mapbox, tiles_mapbox_sat, dataset, verdieping, latest_year)
 
     # make_portieken_html(current_year, use_fiscal, merged, map_center, tiles_sat, attr_sat, tiles_mapbox, attr_mapbox, tiles_mapbox_sat, dataset)
+
+    make_kolommen_html(current_year, map_center, tiles_sat, attr_sat, tiles_mapbox, attr_mapbox, tiles_mapbox_sat, dataset)
 
 def make_verdiepingen_html(map_center, tiles_sat, attr_sat, tiles_mapbox, attr_mapbox, tiles_mapbox_sat, dataset, verdieping, latest_year):
     m = folium.Map(location=map_center, zoom_start=20, max_zoom = 25)
@@ -518,6 +520,137 @@ def make_portieken_html(current_year, use_fiscal, merged, map_center, tiles_sat,
         folium.LayerControl(collapsed=False).add_to(m)
         m.save(f"htmls/portieken_{title}.html")
 
+def make_kolommen_html(current_year, map_center, tiles_sat, attr_sat, tiles_mapbox, attr_mapbox, tiles_mapbox_sat, dataset):
 
+    #make kolommen geo html. Combined with the reparations data, filtered by year
+        
+    kolommen_filepath = f"geo_features/apartments_verdieping_2.geojson" #just use second floor since it represents it the best
+    kolommen_polygons = gpd.read_file(kolommen_filepath)
+
+    kolommen = kolommen_polygons[["id", "geometry"]]
+    # NOTE floor 2 has the floor 2 apt ids as the index. We will eventually change this to kolommen
+
+    df_complete = pd.read_excel("datasets/appartementen_df_complete.xlsx", index_col=0)
+
+    df_complete.reset_index(inplace=True)
+    df_complete.set_index("Appartementsindex", inplace=True, drop=False)
+    df_complete.sort_index(inplace=True)
+
+    kolommen["Appartementsindex"] = kolommen["id"].apply(lambda x: "A-" + str(x).zfill(3))
+    kolommen.set_index("Appartementsindex", inplace=True)
+
+    kolommen = kolommen.merge(df_complete, left_index=True, right_index=True, how="left")
+    kolommen.set_index("Kolom", inplace=True)
+    kolommen.sort_index(inplace=True)
+
+    # invert kolommen dict to get the apartments in the kolom. 
+    KOLOMMEN_inverted = invert_dict(KOLOMMEN)
+
+    kolommen["apartments_in_kolom"] = kolommen.index.map(KOLOMMEN_inverted)
+
+    df_complete.set_index("Appartement", inplace=True, drop=False)
+
+    m = folium.Map(location=map_center, zoom_start=19, max_zoom = 22)
+
+    sattelite = folium.TileLayer(tiles=tiles_sat, attr=attr_sat, name="Satellite")
+    mapbox = folium.TileLayer(tiles=tiles_mapbox, attr=attr_mapbox, name="Mapbox")
+    open_streetmap = folium.TileLayer('openstreetmap')
+    mapbox_sattelite = folium.TileLayer(tiles=tiles_mapbox_sat, attr=attr_mapbox, name="Mapbox Satellite")
+
+    sattelite.add_to(m)
+    # mapbox.add_to(m)
+    open_streetmap.add_to(m)
+    # mapbox_sattelite.add_to(m)
+
+    # Add the GeoTIFF as an image overlay
+    image_overlay = ImageOverlay(
+        image=dataset.read(1),  # Read the first band of the GeoTIFF
+        # image=dataset.read(),
+        # image=tiff_path,
+        bounds=[(dataset.bounds.bottom, dataset.bounds.left), (dataset.bounds.top, dataset.bounds.right)],
+        opacity=.6,
+        colormap=lambda x: (x, x, x, x),  # Transparent colormap
+        name="Plattegrond: BG"
+    ).add_to(m)
+
+
+    fg = folium.FeatureGroup(name="Portieken info")
+    m.add_child(fg)
+    categorical_palette = cycle(sns.color_palette("Set1", n_colors=10).as_hex())
+
+    for idx, row in kolommen.iterrows():
+
+        color = next(categorical_palette)
+        geo_j = folium.GeoJson(data=row["geometry"], 
+                                style={"fillColor": color}, 
+                                name=f"{idx}", 
+                                zoom_on_click=True,
+                                control=False)
+        floor_0 = []
+        floor_1 = []
+        floor_2 = []
+        floor_3 = []
+        floor_4 = []
+        dakaanbouw = []
+        for apt in row['apartments_in_kolom']:
+            if apt in df_complete.index:
+                if df_complete.loc[apt, "verdieping"] == 0:
+                    floor_0.append(apt)
+                elif df_complete.loc[apt, "verdieping"] == 1:
+                    floor_1.append(apt)
+                elif df_complete.loc[apt, "verdieping"] == 2:
+                    floor_2.append(apt)
+                elif df_complete.loc[apt, "verdieping"] == 3:
+                    floor_3.append(apt)
+                elif df_complete.loc[apt, "verdieping"] == 4:
+                    floor_4.append(apt)
+                
+                if df_complete.loc[apt, "Dakaanbouw"]:
+                    dakaanbouw.append(apt)
+
+        floor_0 = ", ".join(floor_0)
+        floor_1 = ", ".join(floor_1)
+        floor_2 = ", ".join(floor_2)
+        floor_3 = ", ".join(floor_3)
+        floor_4 = ", ".join(floor_4)
+
+        dakaanbouw = ", ".join(dakaanbouw)
+        html = f"""
+        <h1>Kolom {idx}</h1>
+        <table>
+            <tr>
+                <td>Begane grond:</td>
+                <td>{floor_0}</td>
+            </tr>
+            <tr>
+                <td>Verdieping 1:</td>
+                <td>{floor_1}</td>
+            </tr>
+            <tr>
+                <td>Verdieping 2:</td>
+                <td>{floor_2}</td>
+            </tr>
+            <tr>
+                <td>Verdieping 3:</td>
+                <td>{floor_3}</td>
+            </tr>
+            <tr>
+                <td>Verdieping 4:</td>
+                <td>{floor_4}</td>
+            </tr>
+            <tr>
+                <td>Dakopbouw:</td>
+                <td>{dakaanbouw}</td>
+            </tr>
+        </table>
+
+        """
+
+        iframe = branca.element.IFrame(html=html, width=500, height=400)
+        folium.Popup(iframe, max_width=500, max_height=400).add_to(geo_j)
+        geo_j.add_to(fg)#.add_to(m)
+
+    folium.LayerControl(collapsed=False).add_to(m)
+    m.save(f"htmls/kolommen.html")
 if __name__ == "__main__":
     main()
