@@ -611,7 +611,8 @@ def make_kolommen_html(current_year, map_center, tiles_sat, attr_sat, tiles_mapb
                 
                 if df_complete.loc[apt, "Dakaanbouw"]:
                     dakaanbouw.append(apt_)
-
+        if len(floor_0) == 0:
+            floor_0 = ["Berging"]
         floor_0 = ", ".join(floor_0)
         floor_1 = ", ".join(floor_1)
         floor_2 = ", ".join(floor_2)
@@ -619,36 +620,64 @@ def make_kolommen_html(current_year, map_center, tiles_sat, attr_sat, tiles_mapb
         floor_4 = ", ".join(floor_4)
 
         dakaanbouw = ", ".join(dakaanbouw)
-        html = f"""
-        <h1>Kolom {idx}</h1>
-        <table>
-            <tr>
-                <td>Begane grond:</td>
-                <td>{floor_0}</td>
-            </tr>
-            <tr>
-                <td>Verdieping 1:</td>
-                <td>{floor_1}</td>
-            </tr>
-            <tr>
-                <td>Verdieping 2:</td>
-                <td>{floor_2}</td>
-            </tr>
-            <tr>
-                <td>Verdieping 3:</td>
-                <td>{floor_3}</td>
-            </tr>
-            <tr>
-                <td>Verdieping 4:</td>
-                <td>{floor_4}</td>
-            </tr>
-            <tr>
-                <td>Dakopbouw:</td>
-                <td>{dakaanbouw}</td>
-            </tr>
-        </table>
+        if len(floor_4) == 0:
+            html = f"""
+            <h1>Kolom {idx}</h1>
+            <table>
+                <tr>
+                    <td>Begane grond:</td>
+                    <td>{floor_0}</td>
+                </tr>
+                <tr>
+                    <td>Verdieping 1:</td>
+                    <td>{floor_1}</td>
+                </tr>
+                <tr>
+                    <td>Verdieping 2:</td>
+                    <td>{floor_2}</td>
+                </tr>
+                <tr>
+                    <td>Verdieping 3:</td>
+                    <td>{floor_3}</td>
+                </tr>
+                <tr>
+                    <td>Dakopbouw:</td>
+                    <td>{dakaanbouw}</td>
+                </tr>
+            </table>
 
-        """
+            """
+        else:
+            html = f"""
+            <h1>Kolom {idx}</h1>
+            <table>
+                <tr>
+                    <td>Begane grond:</td>
+                    <td>{floor_0}</td>
+                </tr>
+                <tr>
+                    <td>Verdieping 1:</td>
+                    <td>{floor_1}</td>
+                </tr>
+                <tr>
+                    <td>Verdieping 2:</td>
+                    <td>{floor_2}</td>
+                </tr>
+                <tr>
+                    <td>Verdieping 3:</td>
+                    <td>{floor_3}</td>
+                </tr>
+                <tr>
+                    <td>Verdieping 4:</td>
+                    <td>{floor_4}</td>
+                </tr>
+                <tr>
+                    <td>Dakopbouw:</td>
+                    <td>{dakaanbouw}</td>
+                </tr>
+            </table>
+            
+            """
 
         iframe = branca.element.IFrame(html=html, width=500, height=400)
         folium.Popup(iframe, max_width=500, max_height=400).add_to(geo_j)
