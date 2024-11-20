@@ -594,19 +594,23 @@ def make_kolommen_html(current_year, map_center, tiles_sat, attr_sat, tiles_mapb
         dakaanbouw = []
         for apt in row['apartments_in_kolom']:
             if apt in df_complete.index:
+                if df_complete.loc[apt, "Bezit Ymere"]:
+                    apt_ = f"{apt} (Ymere)"
+                else:
+                    apt_ = apt
                 if df_complete.loc[apt, "verdieping"] == 0:
-                    floor_0.append(apt)
+                    floor_0.append(apt_)
                 elif df_complete.loc[apt, "verdieping"] == 1:
-                    floor_1.append(apt)
+                    floor_1.append(apt_)
                 elif df_complete.loc[apt, "verdieping"] == 2:
                     floor_2.append(apt)
                 elif df_complete.loc[apt, "verdieping"] == 3:
-                    floor_3.append(apt)
+                    floor_3.append(apt_)
                 elif df_complete.loc[apt, "verdieping"] == 4:
-                    floor_4.append(apt)
+                    floor_4.append(apt_)
                 
                 if df_complete.loc[apt, "Dakaanbouw"]:
-                    dakaanbouw.append(apt)
+                    dakaanbouw.append(apt_)
 
         floor_0 = ", ".join(floor_0)
         floor_1 = ", ".join(floor_1)
