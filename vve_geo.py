@@ -603,7 +603,7 @@ def make_kolommen_html(current_year, map_center, tiles_sat, attr_sat, tiles_mapb
                 elif df_complete.loc[apt, "verdieping"] == 1:
                     floor_1.append(apt_)
                 elif df_complete.loc[apt, "verdieping"] == 2:
-                    floor_2.append(apt)
+                    floor_2.append(apt_)
                 elif df_complete.loc[apt, "verdieping"] == 3:
                     floor_3.append(apt_)
                 elif df_complete.loc[apt, "verdieping"] == 4:
